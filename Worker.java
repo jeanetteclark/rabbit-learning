@@ -3,8 +3,10 @@ import java.io.*;
 
 public class Worker {
 
+private final static String EXCHANGE_NAME = "rabbit";
   private static final String TASK_QUEUE_NAME = "task_queue";
   private static final String COMPLETED_QUEUE = "completed_queue";
+  private final static String TASK_ROUTING_KEY = "task";
   private static com.rabbitmq.client.Connection connection;
   private static com.rabbitmq.client.Channel channel;
   private static String final_message = "";
@@ -69,13 +71,15 @@ public class Worker {
        need to be created.
      */
     ConnectionFactory factory = new ConnectionFactory();
+    factory.setAutomaticRecoveryEnabled(true);
     boolean durable = true;
     try {
         connection = factory.newConnection();
         channel = connection.createChannel();
 
         channel.queueDeclare(TASK_QUEUE_NAME, durable, false, false, null);
-        // Channel will only send one request for each worker at a time.
+        channel.exchangeDeclare(EXCHANGE_NAME, "direct", durable);
+        channel.queueBind(TASK_QUEUE_NAME, EXCHANGE_NAME, TASK_ROUTING_KEY);
 
         channel.basicQos(1);
         System.out.println("Connected to RabbitMQ queue " + TASK_QUEUE_NAME);
