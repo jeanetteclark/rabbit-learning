@@ -11,23 +11,19 @@ public class Worker {
 
   public static void main(String[] argv) throws Exception {
 
-    ConnectionFactory factory = new ConnectionFactory();
-    factory.setHost("localhost");
-    final Connection connection = factory.newConnection();
-    final Channel channel = connection.createChannel();
-
-    channel.queueDeclare(TASK_QUEUE_NAME, true, false, false, null);
-    System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
-
-    channel.basicQos(1);
+    Worker wkr = new Worker();
+    wkr.setupQueues();
 
     final Consumer consumer = new DefaultConsumer(channel) {
         @Override
         public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+            
+            //Worker wkr = new Worker();
+            
             String message = new String(body, "UTF-8");
             System.out.println(" [x] Received '" + message + "'");
             try {
-                doWork(message);
+                wkr.doWork(message);
             } catch (Exception e){
                 System.out.println("Unable to send to Completed");
             }
@@ -59,20 +55,32 @@ public class Worker {
     }
   }
 
-  public static void setupQueues() throws IOException {
-    ConnectionFactory factory = new ConnectionFactory();
-    
-    try {
-        factory.setHost("localhost");
-        final Connection connection = factory.newConnection();
-        final Channel channel = connection.createChannel();
+  public void setupQueues () throws IOException {
 
-        channel.queueDeclare(TASK_QUEUE_NAME, true, false, false, null);
-        System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
+    /* Connect to the RabbitMQ queue containing entries for which quality reports
+       need to be created.
+     */
+    ConnectionFactory factory = new ConnectionFactory();
+    boolean durable = true;
+    try {
+        connection = factory.newConnection();
+        channel = connection.createChannel();
+
+        channel.queueDeclare(TASK_QUEUE_NAME, durable, false, false, null);
+        // Channel will only send one request for each worker at a time.
 
         channel.basicQos(1);
-    } catch(Exception e){
-        System.out.println("Unable to connect to RabbitMQ");
+        System.out.println("Connected to RabbitMQ queue " + TASK_QUEUE_NAME);
+        System.out.println("Waiting for messages. To exit press CTRL+C");
+    } catch (Exception e) {
+        System.out.println("exception");
     }
-  }
+
+    try {
+        channel.queueDeclare(COMPLETED_QUEUE, false, false, false, null);
+        
+    } catch (Exception e) {
+        System.out.println("exception");
+    }
+}
 }
