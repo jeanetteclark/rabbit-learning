@@ -21,29 +21,31 @@ public class Worker {
 
     channel.basicQos(1);
 
-    DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-        String message = new String(delivery.getBody(), "UTF-8");
+    final Consumer consumer = new DefaultConsumer(channel) {
+        @Override
+        public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+            String message = new String(body, "UTF-8");
+            System.out.println(" [x] Received '" + message + "'");
+            try {
+                doWork(message);
+            } catch (Exception e){
+                System.out.println("Unable to send to Completed");
+            }
 
-        System.out.println(" [x] Received '" + message + "'");
-        try {
-            doWork(message);
-        } catch (Exception e){
-            System.out.println("Unable to send to Completed");
+            try {
+                String message_final = "Pass it along";
+                channel.basicPublish("", COMPLETED_QUEUE, MessageProperties.PERSISTENT_TEXT_PLAIN, message_final.getBytes("UTF-8"));
+                System.out.println(" [x] Sent '" + message_final + "'");
+            } catch (Exception e){
+                System.out.println("Unable to send to Completed");
+            } finally {
+                System.out.println(" [x] Done");
+                channel.basicAck(envelope.getDeliveryTag(), false);
+            }
         }
-
-        try {
-            String message_final = "Pass it along";
-            channel.basicPublish("", COMPLETED_QUEUE, MessageProperties.PERSISTENT_TEXT_PLAIN, message_final.getBytes("UTF-8"));
-            System.out.println(" [x] Sent '" + message + "'");
-        } catch (Exception e){
-            System.out.println("Unable to send to Completed");
-        } finally {
-            System.out.println(" [x] Done");
-            channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-        }
-    };
-    channel.basicConsume(TASK_QUEUE_NAME, false, deliverCallback, consumerTag -> { });
-  }
+  };
+    channel.basicConsume(TASK_QUEUE_NAME, false, consumer);
+}
 
   private static void doWork(String task) {
     for (char ch : task.toCharArray()) {
