@@ -40,7 +40,7 @@ private final static String EXCHANGE_NAME = "rabbit";
                     wkr.setupQueues();
                     String message_final = "Pass it along";
                     channel.basicPublish("", COMPLETED_QUEUE, MessageProperties.PERSISTENT_TEXT_PLAIN, message_final.getBytes("UTF-8"));
-                    channel.basicConsume(TASK_QUEUE_NAME, false, consumer);
+                    channel.basicConsume(TASK_QUEUE_NAME, false, this);
                 } catch (Exception e){
                     System.out.println("Unable to restart connection");
                 }
