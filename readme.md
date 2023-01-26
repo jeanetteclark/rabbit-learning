@@ -41,7 +41,7 @@ java -cp .:amqp-client-5.7.1.jar:slf4j-api-1.7.26.jar:slf4j-simple-1.7.26.jar Wo
 In another start the Completed queue
 
 ```
-java -cp .:amqp-client-5.7.1.jar:f4j-api-1.7.26.jar:slf4j-simple-1.7.26.jar Completed
+java -cp .:amqp-client-5.7.1.jar:slf4j-api-1.7.26.jar:slf4j-simple-1.7.26.jar Completed
 ```
 
 Finally, in a third send your task. The more periods included the longer it will take to execute
