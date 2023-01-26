@@ -32,7 +32,7 @@ public class Worker {
                 String message_final = "Pass it along";
                 channel.basicPublish("", COMPLETED_QUEUE, MessageProperties.PERSISTENT_TEXT_PLAIN, message_final.getBytes("UTF-8"));
                 System.out.println(" [x] Sent '" + message_final + "'");
-            } catch (Exception e){
+            } catch (AlreadyClosedException rmqe){
                 System.out.println("Unable to send to Completed");
                 try {
                     wkr.setupQueues();
