@@ -31,7 +31,8 @@ public class Worker {
             try {
                 String message_final = "Pass it along";
                 channel.basicPublish("", COMPLETED_QUEUE, MessageProperties.PERSISTENT_TEXT_PLAIN, message_final.getBytes("UTF-8"));
-                System.out.println(" [x] Sent '" + message_final + "'");
+                channel.basicAck(envelope.getDeliveryTag(), false);
+                System.out.println(" [x] Sent in try'" + message_final + "'");
             } catch (AlreadyClosedException rmqe){
                 System.out.println("Unable to send to Completed");
                 try {
@@ -39,12 +40,10 @@ public class Worker {
                     String message_final = "Pass it along";
                     channel.basicPublish("", COMPLETED_QUEUE, MessageProperties.PERSISTENT_TEXT_PLAIN, message_final.getBytes("UTF-8"));
                     channel.basicConsume(TASK_QUEUE_NAME, false, this);
+                    System.out.println(" [x] Sent in catch'" + message_final + "'");
                 } catch (Exception e){
                     System.out.println("Unable to restart connection");
                 }
-            } finally {
-                System.out.println(" [x] Done");
-                channel.basicAck(envelope.getDeliveryTag(), false);
             }
         }
   };
