@@ -23,14 +23,14 @@ public class Worker {
             String message = new String(body, "UTF-8");
             System.out.println(" [x] Received '" + message + "'");
             try {
-                wkr.doWork(message);
                 channel.basicAck(envelope.getDeliveryTag(), false);
+                wkr.doWork(message);
             } catch (Exception e){
                 System.out.println("Unable to send to Completed");
             }
 
             try {
-                String message_final = "Pass it along";
+                String message_final = "Completed:" + message;
                 channel.basicPublish("", QUEUE_COMPLETED, MessageProperties.PERSISTENT_TEXT_PLAIN, message_final.getBytes("UTF-8"));
                 // ack after success
                 System.out.println(" [x]'" + message_final + "'");
@@ -38,7 +38,7 @@ public class Worker {
                 System.out.println("Unable to send to Completed");
                 try {
                     wkr.setupQueues();
-                    String message_final = "Pass it along";
+                    String message_final = "Completed: " + message;
                     channel.basicPublish("", QUEUE_COMPLETED, MessageProperties.PERSISTENT_TEXT_PLAIN, message_final.getBytes("UTF-8"));
                     channel.basicConsume(QUEUE_WORKER, false, this);
                     // ack after failure and successful retry

@@ -30,7 +30,7 @@ export CP=.:amqp-client-5.7.1.jar:slf4j-api-1.7.26.jar:slf4j-simple-1.7.26.jar
 Compile
 
 ```
-javac -cp $CP Controller.java Worker.java Completed.java
+javac -cp $CP Controller.java Worker.java
 ```
 
 Then in one terminal start the Worker queue
@@ -39,21 +39,16 @@ Then in one terminal start the Worker queue
 java -cp $CP Worker
 ```
 
-In another start the Completed queue
+In another start the Controller, listening on port 4000.
 
 ```
-java -cp $CP Completed
+java -cp $CP Controller 4000
 ```
 
-Finally, in a third send your task. The more periods included the longer it will take to execute.
+Finally, in a third send your task to the controller. The more periods included the longer it will take to execute.
 See the `doWork` method in the Worker class.
 
 ```
-java -cp $CP Controller Hello...
-```
-
-To recreate the consumer timeout issue send:
-
-```
-java -cp $CP Controller Hello...................................................................
+nc localhost 4000
+message1.......
 ```
