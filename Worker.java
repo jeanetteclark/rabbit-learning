@@ -3,8 +3,8 @@ import java.io.*;
 
 public class Worker {
 
-  private static final String TASK_QUEUE_NAME = "task_queue";
-  private static final String COMPLETED_QUEUE = "completed_queue";
+  private static final String QUEUE_WORKER = "quality_queue";
+  private static final String QUEUE_COMPLETED = "completed_queue";
   private static com.rabbitmq.client.Connection connection;
   private static com.rabbitmq.client.Channel channel;
   private static String final_message = "";
@@ -23,27 +23,27 @@ public class Worker {
             String message = new String(body, "UTF-8");
             System.out.println(" [x] Received '" + message + "'");
             try {
-                channel.basicAck(envelope.getDeliveryTag(), false);
                 wkr.doWork(message);
+                channel.basicAck(envelope.getDeliveryTag(), false);
             } catch (Exception e){
                 System.out.println("Unable to send to Completed");
             }
 
             try {
                 String message_final = "Pass it along";
-                channel.basicPublish("", COMPLETED_QUEUE, MessageProperties.PERSISTENT_TEXT_PLAIN, message_final.getBytes("UTF-8"));
+                channel.basicPublish("", QUEUE_COMPLETED, MessageProperties.PERSISTENT_TEXT_PLAIN, message_final.getBytes("UTF-8"));
                 // ack after success
-                System.out.println(" [x] Sent in try'" + message_final + "'");
+                System.out.println(" [x]'" + message_final + "'");
             } catch (AlreadyClosedException rmqe){
                 System.out.println("Unable to send to Completed");
                 try {
                     wkr.setupQueues();
                     String message_final = "Pass it along";
-                    channel.basicPublish("", COMPLETED_QUEUE, MessageProperties.PERSISTENT_TEXT_PLAIN, message_final.getBytes("UTF-8"));
-                    channel.basicConsume(TASK_QUEUE_NAME, false, this);
+                    channel.basicPublish("", QUEUE_COMPLETED, MessageProperties.PERSISTENT_TEXT_PLAIN, message_final.getBytes("UTF-8"));
+                    channel.basicConsume(QUEUE_WORKER, false, this);
                     // ack after failure and successful retry
                     channel.basicAck(envelope.getDeliveryTag(), false);
-                    System.out.println(" [x] Sent in catch'" + message_final + "'");
+                    System.out.println(" [x]" + message_final + "'");
                 } catch (Exception e){
                     // nack and requeue after failures
                     channel.basicNack(envelope.getDeliveryTag(), false, true);
@@ -52,7 +52,7 @@ public class Worker {
             }
         }
   };
-    channel.basicConsume(TASK_QUEUE_NAME, false, consumer);
+    channel.basicConsume(QUEUE_WORKER, false, consumer);
 }
 
   private static void doWork(String task) {
@@ -78,18 +78,18 @@ public class Worker {
         connection = factory.newConnection();
         channel = connection.createChannel();
 
-        channel.queueDeclare(TASK_QUEUE_NAME, durable, false, false, null);
+        channel.queueDeclare(QUEUE_WORKER, durable, false, false, null);
         // Channel will only send one request for each worker at a time.
 
         channel.basicQos(1);
-        System.out.println("Connected to RabbitMQ queue " + TASK_QUEUE_NAME);
+        System.out.println("Connected to RabbitMQ queue " + QUEUE_WORKER);
         System.out.println("Waiting for messages. To exit press CTRL+C");
     } catch (Exception e) {
         System.out.println("exception");
     }
 
     try {
-        channel.queueDeclare(COMPLETED_QUEUE, false, false, false, null);
+        channel.queueDeclare(QUEUE_COMPLETED, false, false, false, null);
         
     } catch (Exception e) {
         System.out.println("exception");

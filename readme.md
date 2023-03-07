@@ -10,6 +10,7 @@ I run all of this standalone, you'll need to download the RabbitMQ [client libra
 First start RabbitMQ either in the foreground
 
 ```
+export RABBITMQ_CONFIG_FILE=~/Documents/rabbit-learning/rabbitmq.conf
 CONF_ENV_FILE="/opt/homebrew/etc/rabbitmq/rabbitmq-env.conf" /opt/homebrew/opt/rabbitmq/sbin/rabbitmq-server
 ```
 
@@ -29,7 +30,7 @@ export CP=.:amqp-client-5.7.1.jar:slf4j-api-1.7.26.jar:slf4j-simple-1.7.26.jar
 Compile
 
 ```
-javac -cp $CP NewTask.java Worker.java Completed.java
+javac -cp $CP Controller.java Worker.java Completed.java
 ```
 
 Then in one terminal start the Worker queue
@@ -44,10 +45,15 @@ In another start the Completed queue
 java -cp $CP Completed
 ```
 
-Finally, in a third send your task. The more periods included the longer it will take to execute
+Finally, in a third send your task. The more periods included the longer it will take to execute.
 See the `doWork` method in the Worker class.
 
 ```
-java -cp $CP NewTask Hello...
+java -cp $CP Controller Hello...
 ```
 
+To recreate the consumer timeout issue send:
+
+```
+java -cp $CP Controller Hello...................................................................
+```

@@ -6,7 +6,8 @@ import java.nio.charset.StandardCharsets;
 
 public class Completed {
 
-    private final static String QUEUE_NAME = "completed_queue";
+    private final static String QUEUE_COMPLETED = "completed_queue";
+    private final static String QUEUE_WORKER = "quality_queue";
 
     public static void main(String[] argv) throws Exception {
         ConnectionFactory factory = new ConnectionFactory();
@@ -14,7 +15,8 @@ public class Completed {
         Connection connection = factory.newConnection();
         Channel channel = connection.createChannel();
 
-        channel.queueDeclare(QUEUE_NAME, false, false, false, null);
+        channel.queueDeclare(QUEUE_COMPLETED, false, false, false, null);
+        channel.queueDeclare(QUEUE_WORKER, true, false, false, null);
         System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
 
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
@@ -26,6 +28,6 @@ public class Completed {
             }
 
         };
-        channel.basicConsume(QUEUE_NAME, false, deliverCallback, consumerTag -> { });
+        channel.basicConsume(QUEUE_COMPLETED, false, deliverCallback, consumerTag -> { });
     }
 }
